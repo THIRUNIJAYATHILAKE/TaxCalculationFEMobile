@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Keyboard,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import {
@@ -19,7 +20,7 @@ import {
 import { TextInput, Button } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Axios from "axios";
-
+import CookieManager from 'react-native-cookie';
 
 export default function LoginScreen() {
   const base_url = 'http://192.168.8.231:3000/api/taxpayer/login';
@@ -40,19 +41,30 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       const res = await Axios.post(base_url, values);
+      setLoading(false);
       if (res.data.Status === "Success") {
-        /*const cookies = await CookieManager.get('http://192.168.8.231:3000');
-        if (cookies && cookies.jwt) {
-          const token = cookies.jwt.value;
-          // You can now use the token as needed
-          console.log('JWT Token:', token);}*/
-        navigation.navigate("dashboard"); // Corrected navigate to use navigation object
+        
+        console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        console.log(res.data);
+        const cookieValue = res.data.headers["Set-Cookie"];
+console.log(cookieValue);
+        console.log(res.data.message);
+        // Retrieve and log JWT token from cookies
+       // CookieManager.get('http://192.168.8.231:3000').then((cookies) => {
+         /* if (cookies.jwt) {
+            const token = cookies.jwt.value;
+            console.log('JWT Token:', token);
+            AsyncStorage.setItem('token', token); // Store JWT token
+          }*/
+       // });
+        navigation.navigate("dashboard");
       } else {
-        setLoading(false);
-        alert("Login Failed!");
+        Alert.alert("Login Failed", res.data.message || "Please try again.");
       }
     } catch (error) {
+      setLoading(false);
       console.log(error);
+      Alert.alert("An error occurred", error.message || "Please try again.");
     }
   };
 
@@ -81,7 +93,7 @@ export default function LoginScreen() {
         <StatusBar barStyle="light-content" backgroundColor="#007BFF" />
 
         <View style={styles.textSection}>
-          <Text style={styles.welcomeText}>Login </Text>
+          <Text style={styles.welcomeText}>Login</Text>
         </View>
 
         <View style={styles.field}>
@@ -121,14 +133,14 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        <View style={{ alignItems: "flex-end", width: responsiveWidth(42), marginBottom: responsiveHeight(1),marginTop:responsiveHeight(1) }}>
+        <View style={{ alignItems: "flex-end", width: responsiveWidth(42), marginBottom: responsiveHeight(1), marginTop: responsiveHeight(1) }}>
           <TouchableOpacity onPress={handleForgotPassword}>
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
 
-        <Button mode="contained" onPress={handleSubmit} style={styles.button}>
-          LOGIN
+        <Button mode="contained" onPress={handleSubmit} style={styles.button} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : "LOGIN"}
         </Button>
 
         <View style={styles.signupTextContainer}>
@@ -197,7 +209,6 @@ const styles = StyleSheet.create({
   signupText: {
     color: "#000",
     fontSize: responsiveFontSize(2),
-    
   },
   signupLink: {
     color: "#007BFF",

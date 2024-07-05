@@ -16,13 +16,17 @@ import Spinner from 'react-native-loading-spinner-overlay';
 import { responsiveHeight, responsiveWidth, responsiveFontSize } from 'react-native-responsive-dimensions';
 
 
+
+
+
 export default function Signup() {
   const base_url = "http://192.168.8.231:3000/api/taxpayer/register"; 
   
   useEffect(() => {
     const getCookies = async () => {
-      const cookies = await Cookies.get();
-      console.log("Cookies:", cookies);
+      const cookies =  Cookies.get();
+      //console.log("------------------------------------------------------------------------------------------------------------------");
+     // console.log("Cookies:", cookies);
     };
     getCookies();
   }, []);
@@ -72,8 +76,9 @@ export default function Signup() {
     try {
       setLoading(true);
       const res = await Axios.post(base_url, values);
-      console.log(res.data.message);
+     //console.log(res.data.message);
       if (res.data.Status === 'Success') {
+        console.log(res.headers.set-cookie);
         navigation.navigate('dashboard');
       } else if (res.data.message === 'already registered email') {
         Alert.alert('Email is already registered! Please Enter another one');
@@ -82,9 +87,9 @@ export default function Signup() {
         Alert.alert('System Error!');
         setLoading(false);
       }
-      console.log(res);
+      //console.log(res);
     } catch (error) {
-      console.log(error);
+     // console.log(error);
     }
   };
 
