@@ -5,31 +5,17 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { TextInput, Button, RadioButton, Checkbox } from 'react-native-paper';
+import { TextInput, Button, RadioButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import Axios from 'axios';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { responsiveHeight, responsiveWidth, responsiveFontSize } from 'react-native-responsive-dimensions';
 
-
-
-
-
 export default function Signup() {
   const base_url = "http://192.168.8.231:3000/api/taxpayer/register"; 
-  
-  useEffect(() => {
-    const getCookies = async () => {
-      const cookies =  Cookies.get();
-      //console.log("------------------------------------------------------------------------------------------------------------------");
-     // console.log("Cookies:", cookies);
-    };
-    getCookies();
-  }, []);
 
   const [warning, setWarning] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -52,7 +38,6 @@ export default function Signup() {
   });
 
   const navigation = useNavigation();
-  
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -76,9 +61,20 @@ export default function Signup() {
     try {
       setLoading(true);
       const res = await Axios.post(base_url, values);
-     //console.log(res.data.message);
+      console.log(res.data.message);
+
       if (res.data.Status === 'Success') {
-        console.log(res.headers.set-cookie);
+        console.log("Request was successful!");
+
+
+        const setCookieHeader = res.headers['set-cookie'];
+        if (setCookieHeader) {
+          const token = setCookieHeader[0].split(';')[0].split('=')[1];
+          console.log("Extracted Token:", token);
+
+
+        }
+
         navigation.navigate('dashboard');
       } else if (res.data.message === 'already registered email') {
         Alert.alert('Email is already registered! Please Enter another one');
@@ -87,9 +83,9 @@ export default function Signup() {
         Alert.alert('System Error!');
         setLoading(false);
       }
-      //console.log(res);
     } catch (error) {
-     // console.log(error);
+      console.log(error);
+      setLoading(false);
     }
   };
 
