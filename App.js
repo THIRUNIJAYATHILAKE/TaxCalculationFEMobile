@@ -11,6 +11,9 @@ import Signup from './component/taxpayer/Signup';
 import Dashboard from './component/taxpayer/Dashboard';
 import Profile from './component/taxpayer/Profile';
 import TaxPaymentHistory from './component/taxpayer/TaxPaymentHistory';
+import TaxView from './component/taxpayer/TaxView';
+import Register from './component/taxpayer/Register';
+import TaxStatus from './component/taxpayer/TaxStatus';
 
 
 const Stack = createStackNavigator();
@@ -28,7 +31,9 @@ export default function App() {
         <Stack.Screen name="dashboard" component={Dashboard} />
         <Stack.Screen name="profile" component={Profile} />
         <Stack.Screen name="taxhistory" component={TaxPaymentHistory} />
-
+        <Stack.Screen name="taxview" component={TaxView} />
+        <Stack.Screen name="register" component={Register} />
+        <Stack.Screen name="taxstatus" component={TaxStatus} />
       </Stack.Navigator>
     </NavigationContainer>
 

@@ -20,10 +20,10 @@ import {
 import { TextInput, Button } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Axios from "axios";
-import CookieManager from 'react-native-cookie';
+import { jwtDecode } from "jwt-decode";
 
 export default function LoginScreen() {
-  const base_url = 'http://192.168.8.231:3000/api/taxpayer/login';
+  const base_url = "http://192.168.8.231:3000/api/taxpayer/login";
 
   const [values, setValues] = useState({
     email: "",
@@ -43,20 +43,16 @@ export default function LoginScreen() {
       const res = await Axios.post(base_url, values);
       setLoading(false);
       if (res.data.Status === "Success") {
-        
         console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++");
         console.log(res.data);
-        const cookieValue = res.data.headers["Set-Cookie"];
-console.log(cookieValue);
+        const token = await AsyncStorage.getItem("userToken");
+        console.log("Extracted Token:", token);
+        if (token) {
+          const decodedToken = jwtDecode(token);
+          const id = decodedToken.id;
+          console.log("Decoded Token ID:", id);
+        }
         console.log(res.data.message);
-        // Retrieve and log JWT token from cookies
-       // CookieManager.get('http://192.168.8.231:3000').then((cookies) => {
-         /* if (cookies.jwt) {
-            const token = cookies.jwt.value;
-            console.log('JWT Token:', token);
-            AsyncStorage.setItem('token', token); // Store JWT token
-          }*/
-       // });
         navigation.navigate("dashboard");
       } else {
         Alert.alert("Login Failed", res.data.message || "Please try again.");
@@ -89,65 +85,75 @@ console.log(cookieValue);
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#007BFF" />
+      <View style={styles.outerContainer}>
+        <View style={styles.container}>
+          <StatusBar barStyle="light-content" backgroundColor="#007BFF" />
 
-        <View style={styles.textSection}>
-          <Text style={styles.welcomeText}>Login</Text>
-        </View>
-
-        <View style={styles.field}>
-          <View style={{ marginBottom: responsiveHeight(2) }}>
-            <TextInput
-              label="Email"
-              mode="outlined"
-              outlineColor="#d9d7d2"
-              activeOutlineColor="#007BFF"
-              theme={{ roundness: 10 }}
-              style={{
-                width: responsiveWidth(87),
-                height: responsiveHeight(6),
-                fontSize: responsiveFontSize(1.9),
-              }}
-              value={values.email}
-              onChangeText={(text) => setValues({ ...values, email: text })}
-            />
+          <View style={styles.textSection}>
+            <Text style={styles.welcomeText}>Login</Text>
           </View>
 
-          <View>
-            <TextInput
-              label="Password"
-              mode="outlined"
-              outlineColor="#d9d7d2"
-              theme={{ roundness: 10 }}
-              activeOutlineColor="#007BFF"
-              style={{
-                width: responsiveWidth(87),
-                height: responsiveHeight(6),
-                fontSize: responsiveFontSize(1.9),
-              }}
-              secureTextEntry
-              value={values.password}
-              onChangeText={(text) => setValues({ ...values, password: text })}
-            />
+          <View style={styles.field}>
+            <View style={{ marginBottom: responsiveHeight(2) }}>
+              <TextInput
+                label="Email"
+                mode="outlined"
+                outlineColor="#d9d7d2"
+                activeOutlineColor="#007BFF"
+                theme={{ roundness: 10 }}
+                style={styles.input}
+                value={values.email}
+                onChangeText={(text) => setValues({ ...values, email: text })}
+              />
+            </View>
+
+            <View>
+              <TextInput
+                label="Password"
+                mode="outlined"
+                outlineColor="#d9d7d2"
+                theme={{ roundness: 10 }}
+                activeOutlineColor="#007BFF"
+                style={styles.input}
+                secureTextEntry
+                value={values.password}
+                onChangeText={(text) =>
+                  setValues({ ...values, password: text })
+                }
+              />
+            </View>
           </View>
-        </View>
 
-        <View style={{ alignItems: "flex-end", width: responsiveWidth(42), marginBottom: responsiveHeight(1), marginTop: responsiveHeight(1) }}>
-          <TouchableOpacity onPress={handleForgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
-        </View>
+          <View
+            style={{
+              alignItems: "flex-start",
+              width: responsiveWidth(87),
+              marginBottom: responsiveHeight(1),
+              marginTop: responsiveHeight(1),
+            }}
+          >
+            <TouchableOpacity onPress={handleForgotPassword}>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
 
-        <Button mode="contained" onPress={handleSubmit} style={styles.button} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : "LOGIN"}
-        </Button>
+          <Button
+            mode="contained"
+            onPress={handleSubmit}
+            style={styles.button}
+            disabled={loading}
+          >
+            {loading ? <ActivityIndicator color="#fff" /> : "LOGIN"}
+          </Button>
 
-        <View style={styles.signupTextContainer}>
-          <Text style={styles.signupText}>Don’t have an account? </Text>
-          <TouchableOpacity onPress={handleSignUp}>
-            <Text style={[styles.signupText, styles.signupLink]}>Sign up</Text>
-          </TouchableOpacity>
+          <View style={styles.signupTextContainer}>
+            <Text style={styles.signupText}>Don’t have an account? </Text>
+            <TouchableOpacity onPress={handleSignUp}>
+              <Text style={[styles.signupText, styles.signupLink]}>
+                Sign up
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </TouchableWithoutFeedback>
@@ -155,64 +161,68 @@ console.log(cookieValue);
 }
 
 const styles = StyleSheet.create({
-  header: {
-    height: responsiveHeight(6.5),
-    backgroundColor: "#007BFF",
-    ...Platform.select({
-      android: {
-        marginTop: StatusBar.currentHeight,
-      },
-    }),
-  },
-  button: {
-    marginTop: responsiveHeight(5),
-    backgroundColor: "#007BFF",
-    width: responsiveWidth(80),
-    padding: responsiveHeight(0),
-    marginLeft: responsiveWidth(10),
-  },
-  welcomeText: {
-    fontSize: responsiveFontSize(5),
-    fontWeight: "bold",
-    top: responsiveHeight(0.1),
-  },
-  signInText: {
-    fontSize: responsiveFontSize(2),
-    marginTop: 50,
+  outerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F0F2F5",
+    paddingTop: responsiveHeight(10),
+    marginTop: responsiveHeight(-29),
   },
   container: {
-    flex: 1,
-    backgroundColor: "white",
+    paddingTop: responsiveHeight(5),
+    paddingBottom: responsiveHeight(5),
+    width: responsiveWidth(90),
+    padding: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    // Shadow for iOS
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    // Elevation for Android
+    elevation: 10,
+    alignItems: "center",
   },
   textSection: {
-    marginLeft: responsiveWidth(5),
+    marginBottom: responsiveHeight(2),
+  },
+  welcomeText: {
+    fontSize: responsiveFontSize(2.5),
+    fontWeight: "bold",
+    color: "#007BFF",
   },
   field: {
-    width: responsiveWidth(100),
-    top: responsiveHeight(5),
+    width: "100%",
+    marginBottom: responsiveHeight(2),
     alignItems: "center",
+  },
+  input: {
+    width: responsiveWidth(87),
+    height: responsiveHeight(5),
+    fontSize: responsiveFontSize(1.8),
   },
   forgotPasswordText: {
     color: "#007BFF",
-    fontSize: responsiveFontSize(2),
-    textDecorationLine: "none",
-    textAlign: "left",
-    top: responsiveHeight(3),
-    marginTop: responsiveHeight(4),
-    marginLeft: responsiveWidth(8),
+    fontSize: responsiveFontSize(1.8),
+  },
+  button: {
+    width: responsiveWidth(87),
+    backgroundColor: "#007AFF",
+    borderRadius: 8,
+    paddingVertical: responsiveHeight(1),
+    alignItems: "center",
   },
   signupTextContainer: {
     flexDirection: "row",
-    marginLeft: responsiveWidth(8),
-    top: responsiveHeight(3),
+    marginTop: responsiveHeight(2),
   },
   signupText: {
-    color: "#000",
-    fontSize: responsiveFontSize(2),
+    fontSize: responsiveFontSize(1.8),
+    color: "#444444",
   },
   signupLink: {
     color: "#007BFF",
-    marginLeft: responsiveFontSize(0.5),
-    textDecorationLine: "none",
   },
 });

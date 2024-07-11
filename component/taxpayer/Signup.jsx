@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,55 +7,92 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { TextInput, Button, RadioButton } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
-import Axios from 'axios';
-import Spinner from 'react-native-loading-spinner-overlay';
-import { responsiveHeight, responsiveWidth, responsiveFontSize } from 'react-native-responsive-dimensions';
-
+} from "react-native";
+import { TextInput, Button, RadioButton } from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
+import Axios from "axios";
+import Spinner from "react-native-loading-spinner-overlay";
+import {
+  responsiveHeight,
+  responsiveWidth,
+  responsiveFontSize,
+} from "react-native-responsive-dimensions";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function Signup() {
-  const base_url = "http://192.168.8.231:3000/api/taxpayer/register"; 
+  const base_url = "http://192.168.8.231:3000/api/taxpayer/register";
 
-  const [warning, setWarning] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [password, setPassword] = useState('');
+  const [warning, setWarning] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [email, setEmail] = useState("");
   const [values, setValues] = useState({
-    email: '',
-    password: '',
-    name: '',
-    address: '',
-    tin: '',
-    nameofemployer: '',
-    mobileno: '',
-    officeno: '',
-    homeno: '',
-    birthday: '',
-    agreeToannualFee: '',
-    dprSource: '',
+    email: "",
+    password: "",
+    name: "",
+    address: "",
+    tin: "",
+    nameofemployer: "",
+    mobileno: "",
+    officeno: "",
+    homeno: "",
+    birthday: "",
+    agreeToannualFee: "",
+    dprSource: "",
   });
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password) => {
+    const passwordRegex =
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
   const navigation = useNavigation();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (password === '') {
-      setWarning('Enter password!');
+    /*
+    if (!validateEmail(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
-    if (confirmPassword === '') {
-      setWarning('Confirm password!');
+
+    if (!validatePassword(password)) {
+      Alert.alert('Invalid Password', 'Password must be at least 8 characters long and include at least one uppercase letter, one number, and one special character.');
+      return;
+    }
+      if (email) {
+      Alert.alert("Please fill in all fields");
+      return;
+    }
+*/
+if (password.length < 8) {
+  setWarning("Password must be at least 8 characters long");
+  return;
+}
+
+    
+    if (password === "") {
+      setWarning("Enter password!");
+      return;
+    }
+    if (confirmPassword === "") {
+      setWarning("Confirm password!");
       return;
     }
 
     if (password !== confirmPassword) {
-      setWarning('Passwords do not match!');
-      setPassword('');
-      setConfirmPassword('');
-      setValues({ ...values, password: '' });
+      setWarning("Passwords do not match!");
+      setPassword("");
+      setConfirmPassword("");
+      setValues({ ...values, password: "" });
       return;
+
+      Alert.alert("Success", "Email and Password are valid!");
     }
 
     try {
@@ -63,24 +100,22 @@ export default function Signup() {
       const res = await Axios.post(base_url, values);
       console.log(res.data.message);
 
-      if (res.data.Status === 'Success') {
+      if (res.data.Status === "Success") {
         console.log("Request was successful!");
 
-
-        const setCookieHeader = res.headers['set-cookie'];
+        const setCookieHeader = res.headers["set-cookie"];
         if (setCookieHeader) {
-          const token = setCookieHeader[0].split(';')[0].split('=')[1];
+          const token = setCookieHeader[0].split(";")[0].split("=")[1];
           console.log("Extracted Token:", token);
-
-
+          await AsyncStorage.setItem("userToken", token);
         }
 
-        navigation.navigate('dashboard');
-      } else if (res.data.message === 'already registered email') {
-        Alert.alert('Email is already registered! Please Enter another one');
+        navigation.navigate("dashboard");
+      } else if (res.data.message === "already registered email") {
+        Alert.alert("Email is already registered! Please Enter another one");
         setLoading(false);
       } else {
-        Alert.alert('System Error!');
+        Alert.alert("System Error!");
         setLoading(false);
       }
     } catch (error) {
@@ -90,7 +125,10 @@ export default function Signup() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
       <ScrollView contentContainerStyle={styles.scrollView}>
         <Spinner visible={loading} />
         <View style={styles.form}>
@@ -133,7 +171,9 @@ export default function Signup() {
             mode="outlined"
             style={styles.input}
             value={values.nameofemployer}
-            onChangeText={(text) => setValues({ ...values, nameofemployer: text })}
+            onChangeText={(text) =>
+              setValues({ ...values, nameofemployer: text })
+            }
           />
 
           <Text style={styles.subHeader}>Contact Numbers</Text>
@@ -195,7 +235,9 @@ export default function Signup() {
           <Text style={styles.subHeader}>How do you know DPR?</Text>
 
           <RadioButton.Group
-            onValueChange={(value) => setValues({ ...values, dprSource: value })}
+            onValueChange={(value) =>
+              setValues({ ...values, dprSource: value })
+            }
             value={values.dprSource}
           >
             <View style={styles.radioButton}>
@@ -227,7 +269,9 @@ export default function Signup() {
           <Text style={styles.subHeader}>Are you agree with annual fee?</Text>
 
           <RadioButton.Group
-            onValueChange={(value) => setValues({ ...values, agreeToannualFee: value })}
+            onValueChange={(value) =>
+              setValues({ ...values, agreeToannualFee: value })
+            }
             value={values.agreeToannualFee}
           >
             <View style={styles.radioButton}>
@@ -246,7 +290,7 @@ export default function Signup() {
             style={styles.button}
             loading={loading}
           >
-            {loading ? 'Loading...' : 'Continue'}
+            {loading ? "Loading..." : "Continue"}
           </Button>
         </View>
       </ScrollView>
@@ -257,44 +301,52 @@ export default function Signup() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#F7F9FC",
   },
   scrollView: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: responsiveWidth(5),
   },
   form: {
     borderRadius: 15,
-    padding: 20,
-    backgroundColor: '#D3E9FE',
-    width: '100%',
-    boxShadow: '1px 5px 3px -3px rgba(0,0,0,0.44)',
+    padding: responsiveWidth(5),
+    backgroundColor: "#FFFFFF",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   header: {
     fontSize: responsiveFontSize(3),
     marginBottom: responsiveHeight(2),
-    color: '#0085FF',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "#0085FF",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   subHeader: {
     fontSize: responsiveFontSize(2),
     marginTop: responsiveHeight(2),
+    color: "#333",
+    fontWeight: "bold",
   },
   input: {
     marginBottom: responsiveHeight(2),
   },
   radioButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: responsiveHeight(1),
   },
   button: {
     marginTop: responsiveHeight(3),
-    backgroundColor: '#007BFF',
+    backgroundColor: "#007BFF",
   },
   warning: {
-    color: 'red',
+    color: "red",
     marginBottom: responsiveHeight(2),
+    textAlign: "center",
   },
 });
